@@ -26,10 +26,7 @@ class GradCAM():
         self.fmap_pool = {}
         self.grad_pool = {}
         self.candidate_layers = candidate_layers  # list
-        print('Candidate Layers', self.candidate_layers)
-        print('Model named_modules', self.model.named_modules())
         for name, module in self.model.named_modules():
-            print('name', name)
             if self.candidate_layers is None or name in self.candidate_layers:
                 self.handlers.append(module.register_forward_hook(save_fmaps(name))) # appending I/P & O/P of a layer during forward pass
                 self.handlers.append(module.register_backward_hook(save_grads(name))) # same during backward pass
@@ -121,7 +118,7 @@ def generate_gcam(images, device, labels, model, target_layers):
   return layers, probs, ids
 
 
-def plot_gcam(gcam_layers, images, labels, target_layers, class_names, image_size, predicted, unnormalize):
+def plot_gcam(config, gcam_layers, images, labels, target_layers, class_names, image_size, predicted):
     c = len(images)+1
     r = len(target_layers)+2
     fig = plt.figure(figsize=(32,14))
@@ -136,7 +133,7 @@ def plot_gcam(gcam_layers, images, labels, target_layers, class_names, image_siz
       plt.axis('off')
 
       for j in range(len(images)):
-        img = np.uint8(255*unnormalize(images[j].view(image_size)))
+        img = np.uint8(255*unnormalize(images[j].view(image_size), config))
         if i==0:
           ax = plt.subplot(r, c, j+2)
           ax.text(0, 0.2, f"pred={class_names[predicted[j][0]]}\n[actual={class_names[labels[j]]}]", fontsize=14)
@@ -159,7 +156,6 @@ def plot_gcam(gcam_layers, images, labels, target_layers, class_names, image_siz
 
 def unnormalize(img, config):
   img = img.cpu().numpy().astype(dtype=np.float32)
-  
   for i in range(img.shape[0]):
     img[i] = (img[i]*config.std_dev[i])+config.mean[i] # if not unnormalized then the resulting images will be dark and not visible
   return np.transpose(img, (1,2,0))
