@@ -122,6 +122,7 @@ def run(model, config):
       tb.add_scalar('Train Accuracy', train_acc_val, epoch)
       tb.add_scalar('Test Loss', test_loss_val, epoch)
       tb.add_scalar('Test Accuray', test_acc_val, epoch)
+      print('Added Scalars to Tensorboard')
      
 
   torch.save(model.state_dict(), f"{config.name}.pth")
