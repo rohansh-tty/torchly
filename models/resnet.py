@@ -7,14 +7,17 @@ import torch.nn.functional as F
 class BasicBlock(nn.Module):
     expansion = 1
     
-    def __init__(self, in_planes, planes, stride=1):
+    def __init__(config, self, in_planes, planes, stride=1):
         super(BasicBlock, self).__init__()
+        #  optimizer = getattr(torch.optim, config.optimizer)(model.parameters(), **config.optimizer_params[config.optimizer])
         self.conv1 = nn.Conv2d(
             in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(planes)
+        # self.bn1 = nn.BatchNorm2d(planes)
+        self.bn1 = getattr(torch.nn, config.channel_norm)(planes, **config.channel_norm_params[config.channel_norm])
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3,
                                stride=1, padding=1, bias=False)
-        self.bn2 = nn.BatchNorm2d(planes)
+        # self.bn2 = nn.BatchNorm2d(planes)
+        self.bn2 = getattr(torch.nn, config.channel_norm)(planes, **config.channel_norm_params[config.channel_norm])
 
         self.shortcut = nn.Sequential()
         if stride != 1 or in_planes != self.expansion*planes:
@@ -22,6 +25,7 @@ class BasicBlock(nn.Module):
                 nn.Conv2d(in_planes, self.expansion*planes,
                           kernel_size=1, stride=stride, bias=False),
                 nn.BatchNorm2d(self.expansion*planes)
+                # self.bn1 = getattr(torch.nn, config.channel_norm)(planes, **config.channel_norm_params[config.channel_norm])
             )
 
     def forward(self, x):
@@ -71,7 +75,8 @@ class ResNet(nn.Module):
 
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3,
                                stride=1, padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(64)
+        # self.bn1 = nn.BatchNorm2d(64)
+        self.bn1 = getattr(torch.nn, config.channel_norm)(64, **config.channel_norm_params[config.channel_norm])
         self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
         self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
         self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
@@ -82,7 +87,7 @@ class ResNet(nn.Module):
         strides = [stride] + [1]*(num_blocks-1)
         layers = []
         for stride in strides:
-            layers.append(block(self.in_planes, planes, stride))
+            layers.append(block(self.config, self.in_planes, planes, stride))
             self.in_planes = planes * block.expansion
             
         return nn.Sequential(*layers)
