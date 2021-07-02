@@ -48,14 +48,14 @@ def train(model, config, scheduler, epoch):
 
 
     train_acc_value = correct/len(config.trainloader.dataset)
-    train_loss_value = train_loss/len(config.trainloader.dataset)
+    train_loss_value = sum(train_loss)/len(config.trainloader.dataset)
     tb.add_scalar('Train Loss', train_loss_value, epoch)
     tb.add_scalar('Train Accuracy', train_acc_value, epoch)
 
     return train_loss, train_acc
 
 
-def test(model, config):
+def test(model, config, epoch):
     model.eval()
     test_loss_value = 0
     correct = 0
@@ -120,8 +120,8 @@ def run(model, config):
   for epoch in range(config.EPOCHS):
       print('EPOCH {} | LR {}: '.format(epoch+1, scheduler.get_last_lr()))
       lr_list.append(scheduler.get_last_lr())
-      train_epoch_loss, train_epoch_acc = train(model, config, scheduler)
-      test_loss_val, test_acc_val, test_misc_images = test(model, config)
+      train_epoch_loss, train_epoch_acc = train(model, config, scheduler, epoch)
+      test_loss_val, test_acc_val, test_misc_images = test(model, config, epoch)
       
       train_loss_val = sum(train_epoch_loss)/len(train_epoch_loss)
       train_acc_val = sum(train_epoch_acc)/len(train_epoch_acc)         
@@ -147,7 +147,7 @@ def run(model, config):
   return model_results, test_misc_images
 
 
-def get_class_accuracy(config):
+def get_class_accuracy(model, config):
     class_correct = list(0. for i in range(10))
     class_total = list(0. for i in range(10))
     with torch.no_grad():

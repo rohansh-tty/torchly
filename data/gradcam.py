@@ -123,21 +123,21 @@ def plot_gcam(config, gcam_layers, images, labels, target_layers, class_names, i
     fig = plt.figure(figsize=(30,18))
     # fig.subplots_adjust(hspace=0.01, wspace=0.01)
     ax = plt.subplot(r, c, 1)
-    ax.text(0.3,-0.5, "INPUT", fontsize=14)
+    ax.text(0.3,-0.5, "INPUT", fontsize=10)
     plt.axis('off')
     
 
     for i in range(len(target_layers)):
       target_layer = target_layers[i]
       ax = plt.subplot(r, c, c*(i+1)+1)
-      ax.text(0.3,-0.5, target_layer, fontsize=14)
+      ax.text(0.3,-0.5, target_layer, fontsize=10)
       plt.axis('off')
 
       for j in range(len(images)):
         img = np.uint8(255*unnormalize(images[j].view(image_size), config))
         if i==0:
           ax = plt.subplot(r, c, j+2)
-          ax.text(0, 0.2, f"pred={class_names[predicted[j][0]]}\nactual={class_names[labels[j]]}", fontsize=14)
+          ax.text(0, 0.2, f"pred={class_names[predicted[j][0]]}\nactual={class_names[labels[j]]}", fontsize=10)
           plt.axis('off')
           plt.subplot(r, c, c+j+2)
           plt.imshow(img, interpolation='bilinear')
