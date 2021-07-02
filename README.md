@@ -1,12 +1,12 @@
 # torchkit
 
-![](https://github.com/Gilf641/EVA-6/blob/master/torchkit/torchkit.png)
+![](torchly.png)
 
 PyTorch Utility Package to setup training and testing pipeline for Computer Vision Tasks
 
 ## File Structure
 
-![](https://github.com/Gilf641/EVA-6/blob/master/torchkit/treestructure.png)
+![](treestructure.png)
 
 Package has 5 sub-packages
 

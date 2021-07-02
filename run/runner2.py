@@ -118,7 +118,7 @@ def run(model, config):
 
   print('='*10+'RUNNING THE MODEL'+'='*10)
   for epoch in range(config.EPOCHS):
-      print('EPOCH {} | LR {}: '.format(epoch+1, scheduler.get_last_lr()))
+      print('\nEPOCH {} | LR {}: '.format(epoch+1, scheduler.get_last_lr()))
       lr_list.append(scheduler.get_last_lr())
       train_epoch_loss, train_epoch_acc = train(model, config, scheduler, epoch)
       test_loss_val, test_acc_val, test_misc_images = test(model, config, epoch)
