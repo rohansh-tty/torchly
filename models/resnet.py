@@ -7,7 +7,7 @@ import torch.nn.functional as F
 class BasicBlock(nn.Module):
     expansion = 1
     
-    def __init__(config, self, in_planes, planes, stride=1):
+    def __init__(self, config, in_planes, planes, stride=1):
         super(BasicBlock, self).__init__()
         #  optimizer = getattr(torch.optim, config.optimizer)(model.parameters(), **config.optimizer_params[config.optimizer])
         self.conv1 = nn.Conv2d(
