@@ -3,11 +3,12 @@ import torch.nn.functional as F
 from tqdm import tqdm
 import torch
 from collections import defaultdict
+import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 
 tb = SummaryWriter()
 
-def train(model, config, scheduler):
+def train(model, config, scheduler, epoch):
     train_loss = []
     train_acc = []
 
@@ -45,6 +46,12 @@ def train(model, config, scheduler):
             desc=f'Train set: Loss={loss.item()} Batch_id={batch_idx} Accuracy={100*correct/processed:0.2f}')
         train_acc.append(100*correct/processed)
 
+
+    train_acc_value = correct/len(config.trainloader.dataset)
+    train_loss_value = train_loss/len(config.trainloader.dataset)
+    tb.add_scalar('Train Loss', train_loss_value, epoch)
+    tb.add_scalar('Train Accuracy', train_acc_value, epoch)
+
     return train_loss, train_acc
 
 
@@ -54,6 +61,8 @@ def test(model, config):
     correct = 0
     test_misc_images = []
     count = 0
+    img, label = next(iter(config.testloader))
+    test_input = img.to(config.device)
     with torch.no_grad():
         for data, target in config.testloader:
           count += 1
@@ -67,7 +76,7 @@ def test(model, config):
           result = pred.eq(target.view_as(pred))
 
           if config.misclassified:
-            if count >40  and count < 70:
+            if count >20  and count < 70:
                 for i in range(0, config.testloader.batch_size):
                     if not result[i]:
                         test_misc_images.append({'pred': list(pred)[i], 'label': list(target.view_as(pred))[i], 'image': data[i]})
@@ -80,6 +89,10 @@ def test(model, config):
         100. * correct / len(config.testloader.dataset)))
 
     test_acc = 100. * correct / len(config.testloader.dataset)
+    
+    tb.add_scalar('Test Loss', test_loss_value, epoch)
+    tb.add_scalar('Test Accuracy', test_acc, epoch)
+    tb.add_graph(model, test_input)
 
     return test_loss_value, test_acc, test_misc_images
 
@@ -118,11 +131,9 @@ def run(model, config):
       test_loss.append(test_loss_val)
       test_acc.append(test_acc_val)
       
-      tb.add_scalar('Train Loss', train_loss_val, epoch)
-      tb.add_scalar('Train Accuracy', train_acc_val, epoch)
-      tb.add_scalar('Test Loss', test_loss_val, epoch)
-      tb.add_scalar('Test Accuray', test_acc_val, epoch)
-      print('Added Scalars to Tensorboard')
+    
+      lr = np.array(scheduler.get_last_lr())
+      tb.add_scalar('Learning Rate', lr, epoch)
      
 
   torch.save(model.state_dict(), f"{config.name}.pth")
@@ -134,3 +145,24 @@ def run(model, config):
   model_results['LR'] = lr_list
 
   return model_results, test_misc_images
+
+
+def get_class_accuracy(config):
+    class_correct = list(0. for i in range(10))
+    class_total = list(0. for i in range(10))
+    with torch.no_grad():
+      for data in config.testloader:
+          images, labels = data
+          labels=labels.to(config.device)
+          outputs = model(images.to(config.device))
+          _, predicted = torch.max(outputs, 1)
+          c = (predicted == labels).squeeze()
+          for i in range(4):
+              label = labels[i]
+              class_correct[label] += c[i].item()
+              class_total[label] += 1
+
+
+    for i in range(10):
+        print('Accuracy of %5s : %2d %%' % (
+            config.classes[i], 100 * class_correct[i] / class_total[i]))

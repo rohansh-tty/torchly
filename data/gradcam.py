@@ -117,15 +117,16 @@ def generate_gcam(images, device, labels, model, target_layers):
   gcam.remove_hook()
   return layers, probs, ids
 
-
 def plot_gcam(config, gcam_layers, images, labels, target_layers, class_names, image_size, predicted):
     c = len(images)+1
     r = len(target_layers)+2
-    fig = plt.figure(figsize=(32,14))
-    fig.subplots_adjust(hspace=0.01, wspace=0.01)
+    fig = plt.figure(figsize=(30,18))
+    # fig.subplots_adjust(hspace=0.01, wspace=0.01)
     ax = plt.subplot(r, c, 1)
     ax.text(0.3,-0.5, "INPUT", fontsize=14)
     plt.axis('off')
+    
+
     for i in range(len(target_layers)):
       target_layer = target_layers[i]
       ax = plt.subplot(r, c, c*(i+1)+1)
@@ -136,11 +137,12 @@ def plot_gcam(config, gcam_layers, images, labels, target_layers, class_names, i
         img = np.uint8(255*unnormalize(images[j].view(image_size), config))
         if i==0:
           ax = plt.subplot(r, c, j+2)
-          ax.text(0, 0.2, f"pred={class_names[predicted[j][0]]}\n[actual={class_names[labels[j]]}]", fontsize=14)
+          ax.text(0, 0.2, f"pred={class_names[predicted[j][0]]}\nactual={class_names[labels[j]]}", fontsize=14)
           plt.axis('off')
           plt.subplot(r, c, c+j+2)
           plt.imshow(img, interpolation='bilinear')
           plt.axis('off')
+          plt.subplots_adjust(wspace=0, hspace=0)
           
         
         heatmap = 1-gcam_layers[i][j].cpu().numpy()[0] # reverse the color map
@@ -149,6 +151,7 @@ def plot_gcam(config, gcam_layers, images, labels, target_layers, class_names, i
         superimposed_img = cv2.resize(cv2.addWeighted(img, 0.5, heatmap, 0.5, 0), (128,128))
         plt.subplot(r, c, (i+2)*c+j+2)
         plt.imshow(superimposed_img, interpolation='bilinear')
+        plt.subplots_adjust(wspace=0, hspace=0)
         
         plt.axis('off')
     plt.show()

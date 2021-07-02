@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import tqdm as tqdm
+import matplotlib.pylab as pylab
+
 
 def plot_images(data,file, size=(32,32)):
   r = len(data)//5
@@ -113,10 +115,20 @@ def calc_mean_sd(data, image_size=32):
 
 
 
-def plot_misclassified_rgb(data,file, size=(32,32,3), config=None):
+
+
+def plot_misclassified_rgb(data,file, size=(32,32,3), plot_size=(30,30), config=None):
   r = len(data)//5
-  fig, axes = plt.subplots(r, 5, figsize=(15, 15))
+  fig, axes = plt.subplots(r, 5, figsize=plot_size)
+
+  params = {
+          'axes.labelsize': 'medium',
+          'axes.titlesize':'medium',
+          'xtick.labelsize':'medium',
+          'ytick.labelsize':'medium'
+          }
   
+  pylab.rcParams.update(params)
   # Plot the images
   for i, img in enumerate(data):
       # Get the image
@@ -156,3 +168,24 @@ def plot_data(data, config, cols=8, rows=5, transform=None):
 
   plt.tight_layout()
   plt.show()
+  
+  
+plot_details_dict = {'Test Accuracy(%)': 'Validation Accuracy',
+                     'Train Accuracy(%)': 'Train Accuracy',
+                     'Test Loss(%)': 'Validation Loss',
+                     'Train Loss(%)': 'Train Loss'}
+
+
+def plot_curve(data, y_label):
+  # Plotting both the curves simultaneously
+  with plt.style.context('dark_background'):# fivethirtyeight
+    plt.plot(data[0:70], color='r', label='BatchNorm')
+    
+    # Naming the x-axis, y-axis and the whole graph
+    plt.xlabel("Epochs")
+    plt.ylabel(y_label)
+    plt.title(plot_details_dict[y_label])
+      
+    # Adding legend, which helps us recognize the curve according to it's color
+    plt.legend()
+  
