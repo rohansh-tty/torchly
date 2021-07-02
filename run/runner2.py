@@ -3,6 +3,9 @@ import torch.nn.functional as F
 from tqdm import tqdm
 import torch
 from collections import defaultdict
+from torch.utils.tensorboard import SummaryWriter
+
+tb = SummaryWriter()
 
 def train(model, config, scheduler):
     train_loss = []
@@ -106,11 +109,20 @@ def run(model, config):
       lr_list.append(scheduler.get_last_lr())
       train_epoch_loss, train_epoch_acc = train(model, config, scheduler)
       test_loss_val, test_acc_val, test_misc_images = test(model, config)
-
-      train_loss.append(sum(train_epoch_loss)/len(train_epoch_loss))
-      train_acc.append(sum(train_epoch_acc)/len(train_epoch_acc))
+      
+      train_loss_val = sum(train_epoch_loss)/len(train_epoch_loss)
+      train_acc_val = sum(train_epoch_acc)/len(train_epoch_acc)         
+    
+      train_loss.append(train_loss_val)
+      train_acc.append(train_acc_val)
       test_loss.append(test_loss_val)
       test_acc.append(test_acc_val)
+      
+      tb.add_scalar('Train Loss', train_loss_val, epoch)
+      tb.add_scalar('Train Accuracy', train_acc_val, epoch)
+      tb.add_scalar('Test Loss', test_loss_val, epoch)
+      tb.add_scalar('Test Accuray', test_acc_val, epoch)
+     
 
   torch.save(model.state_dict(), f"{config.name}.pth")
   misclassified = test_misc_images
