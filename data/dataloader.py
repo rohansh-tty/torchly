@@ -13,7 +13,7 @@ def convert(trainset,testset,seed=1,batch_size=128, num_workers=2,pin_memory=Tru
 	if cuda:
 			torch.cuda.manual_seed(SEED)
 
-	dataloader_args = dict(shuffle=True, batch_size=128, num_workers=2, pin_memory=pin_memory) if cuda else dict(shuffle=True, batch_size=64)
+	dataloader_args = dict(shuffle=True, batch_size=batch_size, num_workers=2, pin_memory=pin_memory) if cuda else dict(shuffle=True, batch_size=64)
 	trainloader = torch.utils.data.DataLoader(trainset, **dataloader_args)
 	testloader = torch.utils.data.DataLoader(testset, **dataloader_args)
 	return  trainloader, testloader
