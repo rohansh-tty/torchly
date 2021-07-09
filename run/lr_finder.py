@@ -1,3 +1,4 @@
+# !pip install torch-lr-finder -v --global-option='amp'
 ## LR FINDER ##
 import copy
 import os
