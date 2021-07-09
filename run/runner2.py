@@ -76,7 +76,7 @@ def test(model, config, epoch):
           result = pred.eq(target.view_as(pred))
 
           if config.misclassified:
-            if count >20  and count < 70:
+            if count > 4  and count < 15:
                 for i in range(0, config.testloader.batch_size):
                     if not result[i]:
                         test_misc_images.append({'pred': list(pred)[i], 'label': list(target.view_as(pred))[i], 'image': data[i]})
