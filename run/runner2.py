@@ -5,12 +5,12 @@ import torch
 from collections import defaultdict
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
+from .metric_monitor import MetricMonitor
 
 tb = SummaryWriter()
 
 def train(model, config, scheduler, epoch):
-    train_loss = []
-    train_acc = []
+    train_metric_monitor = MetricMonitor(config.trainloader)
 
     model.train()
     pbar = tqdm(config.trainloader)
@@ -30,7 +30,7 @@ def train(model, config, scheduler, epoch):
                 l1 += p.abs().sum()
             loss +=  1e-5 * l1
 
-        train_loss.append(loss.item())
+        
 
         loss.backward()
         optimizer.step()
@@ -42,38 +42,53 @@ def train(model, config, scheduler, epoch):
         correct += pred.eq(target.view_as(pred)).sum().item()
         processed += len(data)
 
+        # update metrics
+        train_metric_monitor.update('Loss', loss.item())
+        train_metric_monitor.update('Accuracy', 100*correct/processed)
+
+        lossval = train_metric_monitor.getlastval('Loss')
+        accval = train_metric_monitor.getlastval('Accuracy')
+
         pbar.set_description(
-            desc=f'Train set: Loss={loss.item()} Batch_id={batch_idx} Accuracy={100*correct/processed:0.2f}')
-        train_acc.append(100*correct/processed)
+            desc=f'TrainSet: Loss={lossval} Batch_id={batch_idx} Accuracy={accval:0.2f}')
+        
 
-
-    train_acc_value = correct/len(config.trainloader.dataset)
-    train_loss_value = sum(train_loss)/len(config.trainloader.dataset)
-    tb.add_scalar('Train Loss', train_loss_value, epoch)
-    tb.add_scalar('Train Accuracy', train_acc_value, epoch)
-
-    return train_loss, train_acc
-
+    return train_metric_monitor
 
 def test(model, config, epoch):
+    test_metric_monitor = MetricMonitor(config.testloader)
+    
     model.eval()
+    pbar = tqdm(config.testloader)
     test_loss_value = 0
     correct = 0
     test_misc_images = []
     count = 0
     img, label = next(iter(config.testloader))
     test_input = img.to(config.device)
+    
     with torch.no_grad():
         for data, target in config.testloader:
           count += 1
           data, target = data.to(config.device), target.to(config.device)
           output = model(data)
           # sum up batch loss
-          test_loss_value += F.nll_loss(output, target, reduction='sum').item()
+          loss = F.nll_loss(output, target, reduction='sum').item()
+          test_loss_value += loss
+        
           # get the index of the max log-probability
           pred = output.argmax(dim=1, keepdim=True)
           correct += pred.eq(target.view_as(pred)).sum().item()
           result = pred.eq(target.view_as(pred))
+
+          accuracy = 100*correct/len(config.testloader.dataset)
+
+          # update test metrics
+          test_metric_monitor.update('Loss', loss)
+          test_metric_monitor.update('Accuracy', accuracy)
+          
+          lossval = test_metric_monitor.getlastval('Loss')
+          accval = test_metric_monitor.getlastval('Accuracy')
 
           if config.misclassified:
             if count > 4  and count < 15:
@@ -82,28 +97,11 @@ def test(model, config, epoch):
                         test_misc_images.append({'pred': list(pred)[i], 'label': list(target.view_as(pred))[i], 'image': data[i]})
             
 
-    test_loss_value /= len(config.testloader.dataset)
-
-    print('\nTest set: Loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
-        test_loss_value, correct, len(config.testloader.dataset),
-        100. * correct / len(config.testloader.dataset)))
-
-    test_acc = 100. * correct / len(config.testloader.dataset)
-    
-    tb.add_scalar('Test Loss', test_loss_value, epoch)
-    tb.add_scalar('Test Accuracy', test_acc, epoch)
-    tb.add_graph(model, test_input)
-
-    return test_loss_value, test_acc, test_misc_images
+    print('TestSet',test_metric_monitor)
+    return test_metric_monitor, test_misc_images
 
 
 def run(model, config):
-  train_loss = []
-  test_loss = []
-  train_acc = []
-  test_acc = []
-
-
   model_results = defaultdict()
 
   misclassified=None
@@ -120,28 +118,19 @@ def run(model, config):
   for epoch in range(config.EPOCHS):
       print('\nEPOCH {} | LR {}: '.format(epoch+1, scheduler.get_last_lr()))
       lr_list.append(scheduler.get_last_lr())
-      train_epoch_loss, train_epoch_acc = train(model, config, scheduler, epoch)
-      test_loss_val, test_acc_val, test_misc_images = test(model, config, epoch)
-      
-      train_loss_val = sum(train_epoch_loss)/len(train_epoch_loss)
-      train_acc_val = sum(train_epoch_acc)/len(train_epoch_acc)         
-    
-      train_loss.append(train_loss_val)
-      train_acc.append(train_acc_val)
-      test_loss.append(test_loss_val)
-      test_acc.append(test_acc_val)
-      
-    
+      train_metric_monitor = train(model, config, scheduler, epoch)
+      test_metric_monitor, test_misc_images = test(model, config, epoch)
+
       lr = np.array(scheduler.get_last_lr())
       tb.add_scalar('Learning Rate', lr, epoch)
      
 
   torch.save(model.state_dict(), f"{config.name}.pth")
   misclassified = test_misc_images
-  model_results['TrainLoss'] = train_loss
-  model_results['TestLoss'] = test_loss
-  model_results['TrainAcc'] = train_acc
-  model_results['TestAcc'] = test_acc
+  model_results['TrainLoss'] = train_metric_monitor['Loss']['val_list']
+  model_results['TestLoss'] = test_metric_monitor['Loss']['val_list']
+  model_results['TrainAcc'] = train_metric_monitor['Accuracy']['val_list']
+  model_results['TestAcc'] = test_metric_monitor['Accuracy']['val_list']
   model_results['LR'] = lr_list
 
   return model_results, test_misc_images
