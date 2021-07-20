@@ -31,6 +31,8 @@ def summary_string(model, input_size, batch_size=-1, device=torch.device('cuda:0
             conv2d_layer = torch.nn.modules.conv.Conv2d(5,10,3)
             maxpool_layer = torch.nn.modules.MaxPool2d(2)
             
+          
+            
            
             if isinstance(module, conv2d_layer.__class__) or isinstance(module, maxpool_layer.__class__):    
                 
@@ -67,14 +69,16 @@ def summary_string(model, input_size, batch_size=-1, device=torch.device('cuda:0
             summary[m_key]["input_shape"] = list(input[0].size())
             summary[m_key]["input_shape"][0] = batch_size
             
-            
-            if isinstance(output, (list, tuple)):
-                summary[m_key]["output_shape"] = [
-                    [-1] + list(o.size())[1:] for o in output
-                ]
-            else:
-                summary[m_key]["output_shape"] = list(output.size())
-                summary[m_key]["output_shape"][0] = batch_size
+            if output is not None:
+              # print('op type',output.shape, type(output))
+              if isinstance(output, (list, tuple)):
+                  summary[m_key]["output_shape"] = [
+                      [-1] + list(o.size())[1:] for o in output
+                  ]
+              else:
+                  summary[m_key]["output_shape"] = list(output.size())
+                  summary[m_key]["output_shape"][0] = batch_size
+           
 
             params = 0
             
@@ -132,6 +136,7 @@ def summary_string(model, input_size, batch_size=-1, device=torch.device('cuda:0
     trainable_params = 0
     total_receptive_field = [1]
     for layer in summary:
+      try:
         # input_shape, output_shape, trainable, nb_params
         line_new = "{:>20}  {:>25} {:>15} {:>15}".format(
             layer,
@@ -148,6 +153,9 @@ def summary_string(model, input_size, batch_size=-1, device=torch.device('cuda:0
             if summary[layer]["trainable"] == True:
                 trainable_params += summary[layer]["nb_params"]
         summary_str += line_new + "\n"
+      except Exception as e:
+
+        pass
 
     # assume 4 bytes/number (float on cuda).
     total_input_size = abs(np.prod(sum(input_size, ()))
