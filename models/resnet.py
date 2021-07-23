@@ -101,7 +101,7 @@ class ResNet(nn.Module):
         print('final_op', final_op.shape)
         if self.config.loss_function == 'CrossEntropyLoss':
             return final_op
-        elif self.config.loss_function == 'NLLoss':
+        elif self.config.loss_function == 'nll_loss':
             return F.log_softmax(final_op, dim=-1)
 
 def ResNet18(config):
