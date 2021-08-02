@@ -3,6 +3,7 @@ from torch import Tensor
 import torch.nn as nn
 # from .._internally_replaced_utils import load_state_dict_from_url
 from typing import Type, Any, Callable, Union, List, Optional
+import torch.nn.functional as F
 
 
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
@@ -242,8 +243,8 @@ class ResNet(nn.Module):
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
         x = self.fc(x)
-
-        return x
+        
+        return F.log_softmax(x,dim=-1)
 
     def forward(self, x: Tensor) -> Tensor:
         return self._forward_impl(x)
