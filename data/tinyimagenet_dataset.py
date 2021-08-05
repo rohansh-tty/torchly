@@ -2,6 +2,7 @@
 
 from torch.utils.data import Dataset, random_split
 from tqdm import tqdm_notebook
+from tqdm import notebook
 from tqdm import *
 
 def create_dataset(dataset_path, id_path, splitRatio = 70, test_transforms = None, train_transforms = None):
