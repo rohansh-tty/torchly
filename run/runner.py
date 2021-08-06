@@ -36,7 +36,7 @@ class MetricMonitor:
       
       
  
-def train(train_loader, model, criterion, optimizer, epoch):
+def train(train_loader, model, modelconfig, criterion, optimizer, epoch):
     train_metric_monitor = MetricMonitor()
     model.train()
     stream = tqdm(train_loader)
@@ -68,7 +68,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
     return train_metric_monitor
  
  
-def validate(val_loader, model, criterion, epoch):
+def validate(val_loader, model, modelconfig, criterion, epoch):
     val_metric_monitor = MetricMonitor()
     model.eval()
     stream = tqdm(val_loader)
