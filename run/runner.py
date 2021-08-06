@@ -1,6 +1,7 @@
 from tqdm import tqdm_notebook
 from tqdm import tqdm
 from collections import defaultdict 
+import torch
 
 class MetricMonitor:
     def __init__(self, float_precision=3):
