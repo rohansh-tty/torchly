@@ -3,6 +3,7 @@ from tqdm import tqdm
 from collections import defaultdict 
 import torch
 
+ 
 class MetricMonitor:
     def __init__(self, float_precision=3):
         self.float_precision = float_precision
@@ -36,7 +37,6 @@ class MetricMonitor:
  
       
       
- 
 def train(train_loader, model, modelconfig, criterion, optimizer, scheduler, epoch):
     train_metric_monitor = MetricMonitor()
     model.train()
@@ -64,12 +64,12 @@ def train(train_loader, model, modelconfig, criterion, optimizer, scheduler, epo
         optimizer.step()
         scheduler.step()
         stream.set_description(
-            "   Train.      {metric_monitor}".format(epoch=epoch, metric_monitor=train_metric_monitor)
-        )
+            "   Train.      {metric_monitor} ".format(epoch=epoch, metric_monitor=train_metric_monitor))
+        
     return train_metric_monitor
- 
- 
-def validate(val_loader, model, modelconfig, criterion,epoch):
+
+
+def validate(val_loader, model, modelconfig, criterion, epoch):
     val_metric_monitor = MetricMonitor()
     model.eval()
     stream = tqdm(val_loader)
@@ -89,6 +89,7 @@ def validate(val_loader, model, modelconfig, criterion,epoch):
             
             processed += (len(images))
             accuracy = 100*correct/(processed)
+            
  
             if count > 4  and count < 15 and images.shape[0] == modelconfig.testloader.batch_size:
               for i in range(0, modelconfig.testloader.batch_size):
@@ -99,7 +100,6 @@ def validate(val_loader, model, modelconfig, criterion,epoch):
             val_metric_monitor.update("Loss", loss.item())
             val_metric_monitor.update("Accuracy", accuracy)
             stream.set_description(
-                "   Validation. {metric_monitor}".format(epoch=epoch, metric_monitor=val_metric_monitor)
-            )
+                "   Validation. {metric_monitor}".format(epoch=epoch, metric_monitor=val_metric_monitor))
+            
     return val_metric_monitor, test_misc_images
- 

@@ -173,19 +173,17 @@ def plot_data(data, config, cols=8, rows=5, transform=None):
 plot_details_dict = {'Test Accuracy(%)': 'Validation Accuracy',
                      'Train Accuracy(%)': 'Train Accuracy',
                      'Test Loss(%)': 'Validation Loss',
-                     'Train Loss(%)': 'Train Loss'}
+                     'Train Loss(%)': 'Train Loss',
+                     'Learning Rate': 'LR'}
 
 
 def plot_curve(data, y_label):
   # Plotting both the curves simultaneously
   with plt.style.context('dark_background'):# fivethirtyeight
-    plt.plot(data[0:70], color='r', label='BatchNorm')
+    plt.plot(data[0:70], color='r')
     
     # Naming the x-axis, y-axis and the whole graph
     plt.xlabel("Epochs")
     plt.ylabel(y_label)
     plt.title(plot_details_dict[y_label])
-      
-    # Adding legend, which helps us recognize the curve according to it's color
-    plt.legend()
   
